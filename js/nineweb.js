@@ -1,4 +1,5 @@
 const urlpath = "trista";
+let ddlcont = "全部"; //下拉選單初始值 
 
 const prodList = document.querySelector('.productWrap');
 const shoppingCart = document.querySelector('.shoppingCart-table');
@@ -8,9 +9,6 @@ const inputs = document.querySelectorAll(
     "input[type=text],input[type=tel],input[type=text],input[type=email]"
 );
 let txt = document.querySelectorAll(".orderInfo-message");
-
-
-
 
 let ifCheckOk = false;
 let data;
@@ -27,20 +25,37 @@ function getProduct() {
             data = response.data.products;
             // console.log(data);
             renderProduct(data);
+        }).catch(function (error) {
+            // console.log(error.response.data);
         });
 }
 
 //顯示產品列表
 function renderProduct(data) {
     let str = "";
+
     data.forEach((item) => {
-        str += `<li class="productCard">
-        <h4 class="productType">新品</h4>
-        <img src="${item.images}" alt="">
-        <a href="#" class="addCardBtn" data-id="${item.id}">加入購物車</a>
-        <h3>${item.title}</h3>
-        <del class="originPrice">NT$${item.origin_price}</del>
-        <p class="nowPrice">NT$${item.price}</p>`;
+        if (ddlcont === "全部") {
+            str += `<li class="productCard">
+            <h4 class="productType">新品</h4>
+            <img src="${item.images}" alt="">
+            <a href="#" class="addCardBtn" data-id="${item.id}">加入購物車</a>
+            <h3>${item.title}</h3>
+            <del class="originPrice">NT$${item.origin_price}</del>
+            <p class="nowPrice">NT$${item.price}</p>`;
+
+        }
+        else if (ddlcont === item.category) {
+            str += `<li class="productCard">
+            <h4 class="productType">新品</h4>
+            <img src="${item.images}" alt="">
+            <a href="#" class="addCardBtn" data-id="${item.id}">加入購物車</a>
+            <h3>${item.title}</h3>
+            <del class="originPrice">NT$${item.origin_price}</del>
+            <p class="nowPrice">NT$${item.price}</p>`;
+
+        }
+
     });
 
     prodList.innerHTML = str;
@@ -80,8 +95,11 @@ function addCart(id) {
         )
         .then(function (response) {
             //重新取得購物車內容
+            console.log(response);
 
             getcartList();
+        }).catch(function (error) {
+            // console.log(error.response.data);
         });
 }
 
@@ -94,8 +112,10 @@ function getcartList() {
         .then(function (response) {
             // data=response.data
             data = response.data.carts;
-            // console.log(data);
+            console.log(data);
             rendercartList(data);
+        }).catch(function (error) {
+            // console.log(error.response.data);
         });
 }
 
@@ -103,7 +123,10 @@ function getcartList() {
 function rendercartList(data) {
     let str = "<tr><th width='40%'>品項</th><th width='15%'>單價</th><th width='15%'>數量</th><th width='15%'>金額</th><th width='15%'></th></tr>";
     let totalprice = 0;
+
+
     data.forEach((item) => {
+
         totalprice += parseInt(item.product.price);
         str += `
     <tr>
@@ -121,6 +144,7 @@ function rendercartList(data) {
         </td>
     </tr>
     `;
+
     });
 
     str += `<tr>
@@ -135,6 +159,7 @@ function rendercartList(data) {
     <td>NT$${totalprice}</td>
 </tr>`;
 
+
     shoppingCart.innerHTML = str;
 
     delClick();
@@ -146,8 +171,11 @@ function deleteAllCart() {
     axios.delete(`https://livejs-api.hexschool.io/api/livejs/v1/customer/trista/carts`,
     )
         .then(function (response) {
+            getcartList();
 
-        })
+        }).catch(function (error) {
+            // console.log(error.response.data);
+        });
 }
 
 // 刪除購物車特定品項
@@ -156,20 +184,22 @@ function deleteCartItem(id) {
 
     )
         .then(function (response) {
-            // console.log(response);
-        })
+            getcartList();
+        }).catch(function (error) {
+            // console.log(error.response.data);
+        });
 }
 
 //刪除按鈕事件
 function delClick() {
     shoppingCart.addEventListener('click', function (e) {
-        // e.preventDefault();
+        e.preventDefault();
 
         if (e.target.getAttribute("data-del") !== "del") return;
         let id = e.target.getAttribute("data-id");
 
         deleteCartItem(id);
-        init();
+
     })
 
 
@@ -178,7 +208,7 @@ function delClick() {
 
     delAll.addEventListener('click', function (e) {
         deleteAllCart();
-        init();
+
     })
 
 }
@@ -189,7 +219,7 @@ function delClick() {
 const submit = document.querySelector(".orderInfo-btn");
 
 submit.addEventListener("click", (e) => {
-    
+
     const name = document.querySelector("#customerName").value;
     const tel = document.querySelector("#customerPhone").value;
     const email = document.querySelector("#customerEmail").value;
@@ -221,24 +251,59 @@ submit.addEventListener("click", (e) => {
 
 //檢查送出資料
 function checkData() {
+
+    //驗證規則
+    const constraints = {
+        姓名: {
+            presence: {
+                message: "為必填!"
+            }
+        },
+        電話: {
+            presence: {
+                message: "為必填!"
+            },
+            numericality: {
+                onlyInteger: true,
+                message: "格式不正確！"
+            },
+            length: {
+                is: 10,
+                message: "要 10 碼！"
+            }
+        },
+        信箱: {
+            presence: {
+                message: "為必填!"
+            },
+            email: {
+                message: "請輸入正確信箱格式"
+            }
+        },
+        地址: {
+            presence: {
+                message: "為必填!"
+            }
+        }
+    };
     //檢查
 
     inputs.forEach((item) => {
-        
+
         item.addEventListener("change", function () {
-            item.nextElementSibling.setAttribute("style","display: none;");
-            console.log(item.nextElementSibling);
+            item.nextElementSibling.setAttribute("style", "display: none;");
+            // console.log(item.nextElementSibling);
 
             let errors = validate(form, constraints);
-            console.log(errors);
+            // console.log(errors);
             //檢查是否有錯誤訊息
             if (errors) {
                 Object.keys(errors).forEach(function (keys) {
                     // console.log(keys);
                     txt.forEach((item) => {
                         if (item.getAttribute("data-message") === keys) {
-                            item.setAttribute("style","");
-                            // console.log(item);
+                            item.setAttribute("style", "");
+                            item.innerHTML = errors[keys];
                         }
                     });
                 });
@@ -249,31 +314,6 @@ function checkData() {
         });
     });
 
-    //驗證規則
-    var constraints = {
-        姓名: {
-            presence: {
-                message: "為必填!"
-            }
-        },
-        電話: {
-            presence: {
-                message: "為必填!"
-            }
-        },
-        信箱: {
-            presence: {
-                message: "為必填!"
-            }
-        },
-        地址: {
-            presence: {
-                message: "為必填!"
-            }
-        }
-    };
-
-    // console.log(flag);
 }
 
 
@@ -281,30 +321,41 @@ function checkData() {
 function createOrder(item) {
     console.log(item);
     axios
-      .post(
-        `https://livejs-api.hexschool.io/api/livejs/v1/customer/${urlpath}/orders`,
-        {
-          data: {
-            user: item
-          }
-        }
-      )
-      .then(function (response) {
-        console.log(response.data);
-        alert("訂單送出成功!");
-        //重新取得購物車內容
-        init();
-      })
-      .catch(function (error) {
-        console.log(error.response.data);
-      });
-  }
+        .post(
+            `https://livejs-api.hexschool.io/api/livejs/v1/customer/${urlpath}/orders`,
+            {
+                data: {
+                    user: item
+                }
+            }
+        )
+        .then(function (response) {
+            // console.log(response.data);
+            alert("訂單送出成功!");
+            //重新取得購物車內容
+            init();
+        })
+        .catch(function (error) {
+            // console.log(error.response.data);
+        });
+}
+
+//下拉選單選取事件
+function condition() {
+    const condition = document.querySelector(".productSelect");
+    condition.addEventListener("change", (e) => {
+        ddlcont = e.target.value;
+        getProduct();
+    });
+
+}
 
 
 function init() {
     getProduct();
     getcartList();
     checkData();
+    condition();
 }
 
 init();

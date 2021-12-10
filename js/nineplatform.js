@@ -7,7 +7,7 @@ const table = document.querySelector(".orderPage-table");
 
 
 
-// 取得訂單列表和圓餅圖
+//GET 取得訂單列表和圓餅圖
 function getListandC3() {
     axios.get(`https://livejs-api.hexschool.io/api/livejs/v1/admin/${api_path}/orders`,
         {
@@ -17,33 +17,35 @@ function getListandC3() {
         })
         .then(function (response) {
             data = response.data.orders;
-            //   console.log(data);
+            // console.log(data);
             renderOrderList(data);
             delClick();
+            changeStatu();
+
+        }).catch(function (error) {
+            console.log(error);
+
         })
 }
 
 //組合訂單列表
 function renderOrderList(data) {
     let str = "<thead><tr><th>訂單編號</th><th>聯絡人</th><th>聯絡地址</th><th>電子郵件</th><th>訂單品項</th><th>訂單日期</th><th>訂單狀態</th><th>操作</th></tr></thead>";
-    
+
     // let length=data.length;
     data.forEach((item) => {
-        let prods="";
-        console.log(item.createdAt);
+        let prods = "";
+        // console.log(item.createdAt);
         // 日期轉換
         let date = (new Date(item.createdAt * 1000)).toLocaleDateString();
-        
-        let length=item.products.length;
-        
-        for(let i=0;i<length;i++){
-            prods+=`<ol><li>品項${(i+1)+":</br>"+item.products[i].title}</li></ol>`;
-            
+
+        let length = item.products.length;
+
+        for (let i = 0; i < length; i++) {
+            prods += `<ol><li>品項${(i + 1) + ":</br>" + item.products[i].title}</li></ol>`;
+
         }
 
-       
-
-        // console.log(item);
 
         str += `<tr>
         <td>${item.id}</td>
@@ -58,32 +60,39 @@ function renderOrderList(data) {
         </td>
         <td>${date}</td>
         <td class="orderStatus">
-            <a href="#">${item.paid === true ? "已處理" : "未處理"}</a>
+            <a data-id=${item.id} class="process" href="#">${item.paid === true ? "已處理" : "未處理"}</a>
         </td>
         <td>
             <input data-id="${item.id}" type="button" class="delSingleOrder-Btn" value="刪除">
         </td>
     </tr>`;
     })
-   
+
     table.innerHTML = str;
 
     c3render(data);
 }
 
 //組合圓餅圖
-function c3render(data){
+function c3render(data) {
     //處理圓餅圖
     let totalObj = {};
     data.forEach((item) => {
-        let length=item.products.length;
-        for(let i=0;i<length;i++){
-            
+        let length = item.products.length;
+        for (let i = 0; i < length; i++) {
+
+            //LV1圖
+            // if (totalObj[item.products[i].category] == undefined) {
+            //     totalObj[item.products[i].category] = item.products[i].price;
+            // } else {
+            //     totalObj[item.products[i].category] += item.products[i].price;
+            // } 
+            //LV2圖
             if (totalObj[item.products[i].title] == undefined) {
-                totalObj[item.products[i].title] = 1;
+                totalObj[item.products[i].title] = item.products[i].price;
             } else {
-                totalObj[item.products[i].title] += 1;
-            }  
+                totalObj[item.products[i].title] += item.products[i].price;
+            }
         }
 
     });
@@ -97,7 +106,81 @@ function c3render(data){
         newData.push(ary);
     });
 
-    // console.log(totalObj);
+    console.log("老師教得內容:");
+    console.log(newData);
+
+    //陣列排序大到小
+    newData.sort(function (a, b) {
+        return b[1] - a[1];
+    });
+
+    console.log("排序後:");
+    console.log(newData);
+
+    let newDataLen = newData.length;
+
+    //整理價錢條件
+    let condition = [];
+
+    for (let i = 0; i < newDataLen; i++) {
+        condition.push(newData[i][1]);
+    }
+
+    //去除價錢重複 
+    let result = condition.filter(function (element, index, arr) {
+        console.log(element, index, arr);
+        console.log(arr.indexOf(element));
+        console.log(index);
+        return arr.indexOf(element) === index;
+    });
+    console.log("去除價錢重複排序後:");
+    console.log(result);
+
+    //防呆:前三名價錢條件陣列長度若小於3，
+    let reslen = result.length < 3 ? result.length : 3;
+
+ 
+    // console.log(reslen);
+
+    //找出前三名營收品項，重新組合資料
+    let top3arry = [];
+    let dataother = ["其它", 0];
+
+    //如果整理好資料小於4筆不用塞選 
+    if (newDataLen < 3) {
+        top3arry = newData;
+    } else {
+
+        for (let i = 0; i < newDataLen; i++) {
+
+            //比對前三名資料
+            for (let j = 0; j < reslen; j++) {
+                if (newData[i][1] === result[j])
+                {
+                    top3arry.push(newData[i]);
+                } 
+             
+            }
+
+            //比對第3名後的資料放入其它
+            for(let k=3;k<result.length;k++){
+                if (newData[i][1] === result[k])
+                {
+                    dataother[1] += newData[i][1];
+                }
+            }
+        }
+
+        top3arry.push(dataother);
+
+    }
+
+
+
+    console.log("最後整理好的陣列:");
+    console.log(top3arry);
+
+
 
 
     // C3.js
@@ -105,7 +188,7 @@ function c3render(data){
         bindto: '#chart', // HTML 元素綁定
         data: {
             type: "pie",
-            columns: newData
+            columns: top3arry
             // colors: {
             //     "Louvre 雙人床架": "#DACBFF",
             //     "Antony 雙人床架": "#9D7FEA",
@@ -127,6 +210,9 @@ function deleteAllOrder() {
         })
         .then(function (response) {
 
+        }).catch(function (error) {
+            console.log(error);
+
         })
 }
 
@@ -140,12 +226,16 @@ function deleteOrderItem(orderId) {
         })
         .then(function (response) {
 
+        }).catch(function (error) {
+            console.log(error);
+
         })
 }
 
 //刪除按鈕事件
 function delClick() {
     table.addEventListener('click', function (e) {
+        e.preventDefault();
         if (e.target.value !== "刪除") return;
         let id = e.target.getAttribute("data-id");
         deleteOrderItem(id);
@@ -161,6 +251,46 @@ function delClick() {
 
 }
 
+//訂單處理狀態
+function changeStatu() {
+
+    table.addEventListener('click', function (e) {
+
+        if (e.target.getAttribute('class') !== "process") return;
+        change(e.target.getAttribute('data-id'));
+
+    })
+}
+
+//PUT 修改訂單
+function change(id) {
+    axios.put(`https://livejs-api.hexschool.io/api/livejs/v1/admin/${api_path}/orders`,
+        {
+
+            "data": {
+                "id": id,
+                "paid": true
+            }
+        }, {
+        headers: {
+            'Authorization': token
+        }
+
+
+    }
+
+
+    )
+        .then(function (response) {
+            
+        })
+        .catch(function (error) {
+            console.log(error);
+
+        })
+
+        init(); 
+}
 
 
 
