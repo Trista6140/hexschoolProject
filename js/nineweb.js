@@ -16,17 +16,27 @@ let data;
 
 
 //取得產品列表
-function getProduct() {
+function getProduct(statue) {
     axios
         .get(
             `https://livejs-api.hexschool.io/api/livejs/v1/customer/${urlpath}/products`
         )
         .then(function (response) {
             data = response.data.products;
-            // console.log(data);
             renderProduct(data);
+            //防呆:初始化時，加入購物車按鈕註冊click
+            
+            if (statue === "init") {
+                btnClick();
+            }
+
+
+        })
+        .then(function (response) {
+            getcartList();
+            
         }).catch(function (error) {
-            // console.log(error.response.data);
+
         });
 }
 
@@ -60,8 +70,9 @@ function renderProduct(data) {
 
     prodList.innerHTML = str;
 
-    //註冊按鈕事件
-    btnClick();
+
+
+
 }
 
 //按鈕給予click事件
@@ -69,11 +80,11 @@ function btnClick() {
 
 
     prodList.addEventListener("click", (e) => {
+        e.preventDefault();
         let target = e.target;
         if (target.getAttribute("class") !== "addCardBtn") {
             return;
         }
-        e.preventDefault();
         // console.log(target.getAttribute("class"));
 
         addCart(target.getAttribute("data-id"));
@@ -95,7 +106,7 @@ function addCart(id) {
         )
         .then(function (response) {
             //重新取得購物車內容
-            console.log(response);
+            
 
             getcartList();
         }).catch(function (error) {
@@ -112,8 +123,8 @@ function getcartList() {
         .then(function (response) {
             // data=response.data
             data = response.data.carts;
-            console.log(data);
             rendercartList(data);
+            delClick();
         }).catch(function (error) {
             // console.log(error.response.data);
         });
@@ -121,12 +132,11 @@ function getcartList() {
 
 //顯示購物車資訊
 function rendercartList(data) {
+
     let str = "<tr><th width='40%'>品項</th><th width='15%'>單價</th><th width='15%'>數量</th><th width='15%'>金額</th><th width='15%'></th></tr>";
     let totalprice = 0;
 
-
     data.forEach((item) => {
-
         totalprice += parseInt(item.product.price);
         str += `
     <tr>
@@ -162,7 +172,7 @@ function rendercartList(data) {
 
     shoppingCart.innerHTML = str;
 
-    delClick();
+
 }
 
 
@@ -214,7 +224,7 @@ function delClick() {
 }
 
 
-//填寫訂單
+//填寫訂單後送出
 
 const submit = document.querySelector(".orderInfo-btn");
 
@@ -239,13 +249,7 @@ submit.addEventListener("click", (e) => {
 
         createOrder(objOreder);
 
-        //送出訂單重新將選項清空
-        inputs.forEach((item) => {
-            item.value = "";
-        });
-        document.querySelector("#tradeWay").value = "ATM";
 
-        init();
     }
 });
 
@@ -319,7 +323,6 @@ function checkData() {
 
 // 送出購買訂單
 function createOrder(item) {
-    console.log(item);
     axios
         .post(
             `https://livejs-api.hexschool.io/api/livejs/v1/customer/${urlpath}/orders`,
@@ -333,7 +336,14 @@ function createOrder(item) {
             // console.log(response.data);
             alert("訂單送出成功!");
             //重新取得購物車內容
-            init();
+
+        }).then(function (res) {
+            //送出訂單重新將選項清空
+            inputs.forEach((item) => {
+                item.value = "";
+            });
+            document.querySelector("#tradeWay").value = "ATM";
+            getProduct("change");
         })
         .catch(function (error) {
             // console.log(error.response.data);
@@ -345,15 +355,14 @@ function condition() {
     const condition = document.querySelector(".productSelect");
     condition.addEventListener("change", (e) => {
         ddlcont = e.target.value;
-        getProduct();
+        getProduct("change");
     });
 
 }
 
 
 function init() {
-    getProduct();
-    getcartList();
+    getProduct("init");
     checkData();
     condition();
 }
