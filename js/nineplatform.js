@@ -2,8 +2,8 @@
 const api_path = "trista";
 const token = "Esj5E5pslmcwSXHpsErAkexOloI2";
 
-const table = document.querySelector(".orderPage-table");
-
+const table   = document.querySelector(".orderPage-table");
+const picture = document.querySelector("section.wrap");
 
 
 
@@ -106,16 +106,16 @@ function c3render(data) {
         newData.push(ary);
     });
 
-    console.log("老師教得內容:");
-    console.log(newData);
+    // console.log("老師教得內容:");
+    // console.log(newData);
 
     //陣列排序大到小
     newData.sort(function (a, b) {
         return b[1] - a[1];
     });
 
-    console.log("排序後:");
-    console.log(newData);
+    // console.log("排序後:");
+    // console.log(newData);
 
     let newDataLen = newData.length;
 
@@ -128,13 +128,13 @@ function c3render(data) {
 
     //去除價錢重複 
     let result = condition.filter(function (element, index, arr) {
-        console.log(element, index, arr);
-        console.log(arr.indexOf(element));
-        console.log(index);
+        // console.log(element, index, arr);
+        // console.log(arr.indexOf(element));
+        // console.log(index);
         return arr.indexOf(element) === index;
     });
-    console.log("去除價錢重複排序後:");
-    console.log(result);
+    // console.log("去除價錢重複排序後:");
+    // console.log(result);
 
     //防呆:前三名價錢條件陣列長度若小於3，
     let reslen = result.length < 3 ? result.length : 3;
@@ -174,6 +174,11 @@ function c3render(data) {
         top3arry.push(dataother);
 
     }
+
+    //最後確認圓餅圖陣列是否有資料
+    let top3arrylength=top3arry.length;
+    if(top3arrylength===0) picture.setAttribute("style","display:none");
+    else picture.setAttribute("style","");
 
 
 
@@ -245,7 +250,7 @@ function delClick() {
     let delAll = document.querySelector(".discardAllBtn");
 
     delAll.addEventListener('click', function (e) {
-        deleteAllOrder
+        deleteAllOrder();
         init();
     })
 
