@@ -12,6 +12,7 @@ let txt = document.querySelectorAll(".orderInfo-message");
 
 let ifCheckOk = false;
 let data;
+let carList={}; //累計購物車數量
 
 
 
@@ -94,13 +95,18 @@ function btnClick() {
 
 //加入購物車
 function addCart(id) {
+    let num =1;
+    
+    if(carList[id]!==undefined){
+        num =carList[id]+1;
+    }
     axios
         .post(
             `https://livejs-api.hexschool.io/api/livejs/v1/customer/${urlpath}/carts`,
             {
                 data: {
                     productId: id,
-                    quantity: 1
+                    quantity: num
                 }
             }
         )
@@ -133,11 +139,15 @@ function getcartList() {
 //顯示購物車資訊
 function rendercartList(data) {
 
+    // console.log(data);
+
     let str = "<tr><th width='40%'>品項</th><th width='15%'>單價</th><th width='15%'>數量</th><th width='15%'>金額</th><th width='15%'></th></tr>";
     let totalprice = 0;
 
     data.forEach((item) => {
+        carList[item.product.id]=item.quantity;
         totalprice += parseInt(item.product.price);
+        
         str += `
     <tr>
         <td>
@@ -147,7 +157,11 @@ function rendercartList(data) {
             </div>
         </td>
         <td>NT$${item.product.origin_price}</td>
-        <td>1</td>
+        <td><p class="cartAmount"> 
+        <a href="#"><span class="material-icons cartAmount-icon" data-num="${item.quantity - 1}" data-id="${item.id}">remove</span></a>
+        <span>${item.quantity}</span>
+        <a href="#"><span class="material-icons cartAmount-icon" data-num="${item.quantity + 1}" data-id="${item.id}">add</span></a>
+      </p></td>
         <td>NT$${item.product.price}</td>
         <td class="discardBtn">
             <a data-id="${item.id}" data-del="del"  class="material-icons">clear</a>
@@ -155,25 +169,58 @@ function rendercartList(data) {
     </tr>
     `;
 
+
+
     });
 
-    str += `<tr>
-    <td>
-        <a href="#" class="discardAllBtn">刪除所有品項</a>
-    </td>
+    //購物車內沒有商品，隱藏刪除所有品項
+    let length=data.length;
+    str += "<tr><td>";
+    if(length!==0){
+        str +="<a href='#' class='discardAllBtn'>刪除所有品項</a>";
+    }
+    
+    str +=`</td>
     <td></td>
     <td></td>
     <td>
         <p>總金額</p>
     </td>
-    <td>NT$${totalprice}</td>
-</tr>`;
+    <td>NT$${totalprice}</td></tr>`;
 
 
     shoppingCart.innerHTML = str;
 
+    let cartNumEdit = document.querySelectorAll('.cartAmount-icon');
+        cartNumEdit.forEach(function(item) {
+            item.addEventListener('click', function(e){
+            e.preventDefault();
+            editCartNum(e.target.dataset.num, e.target.dataset.id);
+        })
+    })
 
 }
+
+function editCartNum(num, id) {
+    if (num > 0) {
+      let url = `https://livejs-api.hexschool.io/api/livejs/v1/customer/${urlpath}/carts`;
+      let data = {
+        data: {
+          id: id,
+          quantity: parseInt(num)
+        }
+      }
+      axios.patch(url, data)
+        .then(function (res) {
+            getcartList();
+        })
+        .catch(function (error) {
+          console.log(error);
+        })
+    }else {
+        deleteCartItem(id);
+    }
+  }
 
 
 // 刪除購物車全部品項
@@ -334,7 +381,7 @@ function createOrder(item) {
         )
         .then(function (response) {
             // console.log(response.data);
-            alert("訂單送出成功!");
+            alert("訂單送出成功，購物車內產品已清空，請再次選購您需要的產品!");
             //重新取得購物車內容
 
         }).then(function (res) {

@@ -834,3 +834,11 @@ body {
   display: none;
 }
 /*# sourceMappingURL=all.css.map */
+
+.cartAmount {
+  display: flex;
+  align-items: center;
+}
+.cartAmount-icon {
+  padding: 10px;
+}
