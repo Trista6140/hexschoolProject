@@ -1,26 +1,31 @@
 // 請代入自己的網址路徑
 const api_path = "trista";
 const token = "Esj5E5pslmcwSXHpsErAkexOloI2";
+const config = {
+    headers: {
+      Authorization: "Esj5E5pslmcwSXHpsErAkexOloI2"
+    }
+  };
 
 const table   = document.querySelector(".orderPage-table");
 const picture = document.querySelector("section.wrap");
-
+let firstTime=0;
 
 
 //GET 取得訂單列表和圓餅圖
 function getListandC3() {
-    axios.get(`https://livejs-api.hexschool.io/api/livejs/v1/admin/${api_path}/orders`,
-        {
-            headers: {
-                'Authorization': token
-            }
-        })
+    axios.get(`https://livejs-api.hexschool.io/api/livejs/v1/admin/${api_path}/orders`,config)
         .then(function (response) {
             data = response.data.orders;
             // console.log(data);
             renderOrderList(data);
-            delClick();
-            changeStatu();
+            if(firstTime===0){
+                changeStatu();
+                delClick();
+                firstTime++;
+            }
+            
+            
 
         }).catch(function (error) {
             console.log(error);
@@ -207,13 +212,9 @@ function c3render(data) {
 
 // 刪除全部訂單
 function deleteAllOrder() {
-    axios.delete(`https://livejs-api.hexschool.io/api/livejs/v1/admin/${api_path}/orders`,
-        {
-            headers: {
-                'Authorization': token
-            }
-        })
+    axios.delete(`https://livejs-api.hexschool.io/api/livejs/v1/admin/${api_path}/orders`,config)
         .then(function (response) {
+            init();
 
         }).catch(function (error) {
             console.log(error);
@@ -223,12 +224,7 @@ function deleteAllOrder() {
 
 // 刪除特定訂單
 function deleteOrderItem(orderId) {
-    axios.delete(`https://livejs-api.hexschool.io/api/livejs/v1/admin/${api_path}/orders/${orderId}`,
-        {
-            headers: {
-                'Authorization': token
-            }
-        })
+    axios.delete(`https://livejs-api.hexschool.io/api/livejs/v1/admin/${api_path}/orders/${orderId}`,config)
         .then(function (response) {
 
         }).catch(function (error) {
@@ -250,8 +246,9 @@ function delClick() {
     let delAll = document.querySelector(".discardAllBtn");
 
     delAll.addEventListener('click', function (e) {
+        e.preventDefault();
         deleteAllOrder();
-        init();
+        ;
     })
 
 }
@@ -262,31 +259,32 @@ function changeStatu() {
     table.addEventListener('click', function (e) {
 
         if (e.target.getAttribute('class') !== "process") return;
-        change(e.target.getAttribute('data-id'));
+        change(e.target.getAttribute('data-id'),e.target.textContent);
+        
 
     })
 }
 
 //PUT 修改訂單
-function change(id) {
+function change(id,textContent) {
+    let statue=true;
+    if(textContent==="已處理"){
+        statue=false;
+    }
     axios.put(`https://livejs-api.hexschool.io/api/livejs/v1/admin/${api_path}/orders`,
         {
 
             "data": {
                 "id": id,
-                "paid": true
+                "paid": statue
             }
-        }, {
-        headers: {
-            'Authorization': token
-        }
-
-
-    }
+        }, 
+        config
 
 
     )
         .then(function (response) {
+            getListandC3();
             
         })
         .catch(function (error) {
@@ -294,7 +292,7 @@ function change(id) {
 
         })
 
-        init(); 
+        
 }
 
 
@@ -305,6 +303,8 @@ function change(id) {
 function init() {
 
     getListandC3();
+    
+    
 
 }
 
