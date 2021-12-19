@@ -334,7 +334,6 @@ logout.addEventListener('click',(e)=>{
     login.setAttribute("style","");
     webcontent.setAttribute("style","display: none");
     chart.textContent="";
-    firstTime=0;
 })
 
 
