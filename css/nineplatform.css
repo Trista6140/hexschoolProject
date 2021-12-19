@@ -808,3 +808,14 @@ body {
   display: none;
 }
 /*# sourceMappingURL=all.css.map */
+
+.orderInfo-formGroup {
+  max-width: 365px;
+  margin: 0 auto 15px;
+}
+.section-title {
+  text-align: center;
+  font-size: 1.75rem;
+  margin-top: 30px;
+  margin-bottom: 30px;
+}

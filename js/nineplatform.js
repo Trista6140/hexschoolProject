@@ -296,10 +296,6 @@ function change(id,textContent) {
 }
 
 
-
-
-
-
 function init() {
 
     getListandC3();
@@ -308,7 +304,44 @@ function init() {
 
 }
 
+//登入按鈕
+const submit =document.querySelector('#submit');
 
-init();
+//登出按鈕
+const logout =document.querySelector('#logout');
+
+
+//管理員身份登入驗證
+submit.addEventListener('click', function(e){
+    
+    const account=document.querySelector("#account").value;
+    const password=document.querySelector("#password").value;
+    const login=document.querySelector("#login");
+    const webcontent=document.querySelector("#webcontent");
+    const chart=document.querySelector("#chart");
+    // console.log(account);
+    if(account==="trista"&&password==="trista"){
+        login.setAttribute("style","display: none");
+        webcontent.setAttribute("style","");
+        
+        init();   
+    }
+})
+
+//登出
+logout.addEventListener('click',(e)=>{
+    e.preventDefault();
+    login.setAttribute("style","");
+    webcontent.setAttribute("style","display: none");
+    chart.textContent="";
+    firstTime=0;
+})
+
+
+
+
+
+
+
 
 
