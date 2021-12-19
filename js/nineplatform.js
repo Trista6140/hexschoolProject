@@ -284,7 +284,8 @@ function change(id,textContent) {
 
     )
         .then(function (response) {
-            getListandC3();
+            data = response.data.orders;
+            renderOrderList(data);
             
         })
         .catch(function (error) {
