@@ -226,6 +226,7 @@ function deleteAllOrder() {
 function deleteOrderItem(orderId) {
     axios.delete(`https://livejs-api.hexschool.io/api/livejs/v1/admin/${api_path}/orders/${orderId}`,config)
         .then(function (response) {
+            init();
 
         }).catch(function (error) {
             console.log(error);
@@ -240,7 +241,7 @@ function delClick() {
         if (e.target.value !== "刪除") return;
         let id = e.target.getAttribute("data-id");
         deleteOrderItem(id);
-        init();
+        
     })
 
     let delAll = document.querySelector(".discardAllBtn");
