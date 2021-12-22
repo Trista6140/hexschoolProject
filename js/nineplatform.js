@@ -12,21 +12,22 @@ const picture = document.querySelector("section.wrap");
 let firstTime=0;
 
 
+
 //GET 取得訂單列表和圓餅圖
 function getListandC3() {
     axios.get(`https://livejs-api.hexschool.io/api/livejs/v1/admin/${api_path}/orders`,config)
         .then(function (response) {
-            data = response.data.orders;
-            // console.log(data);
+            data = response.data.orders.sort(function(a,b){
+                return b.createdAt-a.createdAt;
+            });
+            console.log(data);
             renderOrderList(data);
             if(firstTime===0){
                 changeStatu();
                 delClick();
                 firstTime++;
             }
-            
-            
-
+              
         }).catch(function (error) {
             console.log(error);
 
@@ -35,7 +36,7 @@ function getListandC3() {
 
 //組合訂單列表
 function renderOrderList(data) {
-    let str = "<thead><tr><th>訂單編號</th><th>聯絡人</th><th>聯絡地址</th><th>電子郵件</th><th>訂單品項</th><th>訂單日期</th><th>訂單狀態</th><th>操作</th></tr></thead>";
+    let str = "<thead><tr><th>訂單編號</th><th>聯絡人</th><th>聯絡地址</th><th>電子郵件</th><th >訂單品項</th><th>訂單日期</th><th>訂單狀態</th><th>操作</th></tr></thead>";
 
     // let length=data.length;
     data.forEach((item) => {
@@ -47,7 +48,7 @@ function renderOrderList(data) {
         let length = item.products.length;
 
         for (let i = 0; i < length; i++) {
-            prods += `<ol><li>品項${(i + 1) + ":</br>" + item.products[i].title}</li></ol>`;
+            prods += `<ol><li>品項${(i + 1) + ":</br>" + item.products[i].title}</li>x${item.products[i].quantity}</ol>`;
 
         }
 
@@ -234,13 +235,26 @@ function deleteOrderItem(orderId) {
         })
 }
 
+
 //刪除按鈕事件
 function delClick() {
     table.addEventListener('click', function (e) {
         e.preventDefault();
         if (e.target.value !== "刪除") return;
         let id = e.target.getAttribute("data-id");
-        deleteOrderItem(id);
+        swal({
+            title: "你確定要刪除此筆訂單嗎?",
+            icon: "warning",
+            buttons: true,
+            dangerMode: true
+          })
+          .then((value) => {
+            if(value){
+                deleteOrderItem(id);
+            }
+              
+        });
+        
         
     })
 
@@ -248,11 +262,23 @@ function delClick() {
 
     delAll.addEventListener('click', function (e) {
         e.preventDefault();
-        deleteAllOrder();
-        ;
+        swal({
+            title: "你確定要刪除全部訂單嗎?",
+            icon: "warning",
+            buttons: true,
+            dangerMode: true
+          })
+          .then((value) => {
+            if(value){
+                deleteAllOrder();
+            }
+              
+        });
     })
 
 }
+
+
 
 //訂單處理狀態
 function changeStatu() {
