@@ -147,10 +147,11 @@ function rendercartList(data) {
     let str = "<tr><th width='40%'>品項</th><th width='15%'>單價</th><th width='15%'>數量</th><th width='15%'>金額</th><th width='15%'></th></tr>";
     let totalprice = 0;
 
+
     data.forEach((item) => {
         carList[item.product.id]=item.quantity;
-        totalprice += parseInt(item.product.price);
-        
+        totalprice += parseInt(item.product.price)*parseInt(item.quantity);
+      
         str += `
     <tr>
         <td>
@@ -159,13 +160,13 @@ function rendercartList(data) {
                 <p>${item.product.title}</p>
             </div>
         </td>
-        <td>NT$${item.product.origin_price}</td>
+        <td>NT$${item.product.price}</td>
         <td><p class="cartAmount"> 
         <a href="#"><span class="material-icons cartAmount-icon" data-num="${item.quantity - 1}" data-id="${item.id}">remove</span></a>
         <span>${item.quantity}</span>
         <a href="#"><span class="material-icons cartAmount-icon" data-num="${item.quantity + 1}" data-id="${item.id}">add</span></a>
       </p></td>
-        <td>NT$${item.product.price}</td>
+        <td>NT$ ${parseInt(item.product.price)*parseInt(item.quantity)}</td>
         <td class="discardBtn">
             <a data-id="${item.id}" data-del="del"  class="material-icons">clear</a>
         </td>
