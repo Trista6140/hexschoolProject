@@ -95,6 +95,7 @@ function btnClick() {
 
 //加入購物車
 function addCart(id) {
+    
     let num =1;
     
     if(carList[id]!==undefined){
@@ -111,9 +112,11 @@ function addCart(id) {
             }
         )
         .then(function (response) {
+            //先清掉暫存的空物件
+            carList={};
+            
             //重新取得購物車內容
             
-
             getcartList();
         }).catch(function (error) {
             // console.log(error.response.data);
