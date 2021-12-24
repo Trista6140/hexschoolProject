@@ -9,9 +9,12 @@ const config = {
 
 const table   = document.querySelector(".orderPage-table");
 const picture = document.querySelector("section.wrap");
+const content = document.getElementById('content');
+const pageid = document.getElementById('pageid');
 let firstTime=0;
+let pageLocation=1;
 
-
+let data = {};
 
 //GET 取得訂單列表和圓餅圖
 function getListandC3() {
@@ -20,8 +23,12 @@ function getListandC3() {
             data = response.data.orders.sort(function(a,b){
                 return b.createdAt-a.createdAt;
             });
-            console.log(data);
-            renderOrderList(data);
+            // console.log(data);
+            // pagination();
+
+            pagination(data, pageLocation);
+            // renderOrderList(data);
+            c3render(data);
             if(firstTime===0){
                 changeStatu();
                 delClick();
@@ -34,12 +41,79 @@ function getListandC3() {
         })
 }
 
-//組合訂單列表
-function renderOrderList(data) {
-    let str = "<thead><tr><th>訂單編號</th><th>聯絡人</th><th>聯絡地址</th><th>電子郵件</th><th >訂單品項</th><th>訂單日期</th><th>訂單狀態</th><th>操作</th></tr></thead>";
+function pagination(){
 
-    // let length=data.length;
-    data.forEach((item) => {
+    const dataTotal=data.length;
+
+    const perpage=1;
+
+    const pagetotal=Math.ceil(dataTotal/perpage);
+
+    console.log(`全部資料:${dataTotal}每一頁顯示:${perpage}筆 總頁數:${pagetotal}`);
+
+}
+
+
+
+function pagination(jsonData, nowPage) {
+    // 取得全部資料長度
+    const dataTotal = jsonData.length;
+    
+    // 設定要顯示在畫面上的資料數量
+    // 預設每一頁只顯示 5 筆資料。
+    const perpage = 1;
+    
+    // page 按鈕總數量公式 總資料數量 / 每一頁要顯示的資料
+    // 這邊要注意，因為有可能會出現餘數，所以要無條件進位。
+    const pageTotal = Math.ceil(dataTotal / perpage);
+    
+    // 當前頁數，對應現在當前頁數
+    let currentPage = nowPage;
+    
+    // 因為要避免當前頁數筆總頁數還要多，假設今天總頁數是 3 筆，就不可能是 4 或 5
+    // 所以要在寫入一個判斷避免這種狀況。
+    // 當"當前頁數"比"總頁數"大的時候，"當前頁數"就等於"總頁數"
+    // 注意這一行在最前面並不是透過 nowPage 傳入賦予與 currentPage，所以才會寫這一個判斷式，但主要是預防一些無法預期的狀況，例如：nowPage 突然發神經？！
+    if (currentPage > pageTotal) {
+      currentPage = pageTotal;
+    }
+    
+    // 由前面可知 最小數字為 6 ，所以用答案來回推公式。
+    const minData = (currentPage * perpage) - perpage + 1 ;
+    const maxData = (currentPage * perpage) ;
+    
+    // 先建立新陣列
+    const data = [];
+    // 這邊將會使用 ES6 forEach 做資料處理
+    // 首先必須使用索引來判斷資料位子，所以要使用 index
+    jsonData.forEach((item, index) => {
+      // 獲取陣列索引，但因為索引是從 0 開始所以要 +1。
+      const num = index + 1;
+      // 這邊判斷式會稍微複雜一點
+      // 當 num 比 minData 大且又小於 maxData 就push進去新陣列。
+      if ( num >= minData && num <= maxData) {
+        data.push(item);
+      }
+    })
+    // 用物件方式來傳遞資料
+    const page = {
+      pageTotal,
+      currentPage,
+      hasPage: currentPage > 1,
+      hasNext: currentPage < pageTotal,
+    }
+    renderOrderList(data);
+    pageBtn(page);
+  }
+  
+  //組合訂單列表
+function renderOrderList(data) {
+    let str = '';
+    
+    str = "<thead><tr><th>訂單編號</th><th>聯絡人</th><th>聯絡地址</th><th>電子郵件</th><th >訂單品項</th><th>訂單日期</th><th>訂單狀態</th><th>操作</th></tr></thead>";
+
+//     // let length=data.length;
+     data.forEach((item) => {
         let prods = "";
         // console.log(item.createdAt);
         // 日期轉換
@@ -76,8 +150,49 @@ function renderOrderList(data) {
 
     table.innerHTML = str;
 
-    c3render(data);
-}
+    
+  }
+  
+  function pageBtn (page){
+    let str = '';
+    const total = page.pageTotal;
+    
+    if(page.hasPage) {
+      str += `<li class="page-item"><a class="page-link" href="#" data-page="${Number(page.currentPage) - 1}">Previous</a></li>`;
+    } else {
+      str += `<li class="page-item disabled"><span class="page-link">Previous</span></li>`;
+    }
+    
+  
+    for(let i = 1; i <= total; i++){
+      if(Number(page.currentPage) === i) {
+        str +=`<li class="page-item active"><a class="page-link" href="#" data-page="${i}">${i}</a></li>`;
+      } else {
+        str +=`<li class="page-item"><a class="page-link" href="#" data-page="${i}">${i}</a></li>`;
+      }
+    };
+  
+    if(page.hasNext) {
+      str += `<li class="page-item"><a class="page-link" href="#" data-page="${Number(page.currentPage) + 1}">Next</a></li>`;
+    } else {
+      str += `<li class="page-item disabled"><span class="page-link">Next</span></li>`;
+    }
+  
+    pageid.innerHTML = str;
+  }
+  
+  function switchPage(e){
+    e.preventDefault();
+    console.log(e.target.nodeName);
+    if(e.target.nodeName !== 'A'){
+        console.log(e.target.nodeName); return;
+    } 
+    const page = e.target.dataset.page;
+    pageLocation=page;
+    pagination(data, page);
+  }
+  
+  pageid.addEventListener('click', switchPage);
 
 //組合圓餅圖
 function c3render(data) {
@@ -311,8 +426,12 @@ function change(id,textContent) {
 
     )
         .then(function (response) {
-            data = response.data.orders;
-            renderOrderList(data);
+            data = response.data.orders.sort(function(a,b){
+                return b.createdAt-a.createdAt;
+            });
+            // renderOrderList(data);
+
+            pagination(data, pageLocation);
             
         })
         .catch(function (error) {
@@ -348,12 +467,12 @@ submit.addEventListener('click', function(e){
     const webcontent=document.querySelector("#webcontent");
     const chart=document.querySelector("#chart");
     // console.log(account);
-    if(account==="trista"&&password==="trista"){
+    // if(account==="trista"&&password==="trista"){
         login.setAttribute("style","display: none");
         webcontent.setAttribute("style","");
         
         init();   
-    }
+    // }
 })
 
 //登出
@@ -362,8 +481,13 @@ logout.addEventListener('click',(e)=>{
     login.setAttribute("style","");
     webcontent.setAttribute("style","display: none");
     chart.textContent="";
+    pageLocation=1;
 })
 
+
+
+
+  //參考網址  https://hsiangfeng.github.io/javascript/20190505/1432256317/
 
 
 
