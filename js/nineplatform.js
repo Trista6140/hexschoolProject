@@ -109,10 +109,20 @@ function pagination(jsonData, nowPage) {
   //組合訂單列表
 function renderOrderList(data) {
     let str = '';
+
+    let datalength=data.length;
+
+    //如果產品列表是0分頁不顯示
+    if(datalength===0){
+        pageid.setAttribute("style","display:none");
+    }
+    else{
+        pageid.setAttribute("style","");
+    }
+
+
     
     str = "<thead><tr><th>訂單編號</th><th>聯絡人</th><th>聯絡地址</th><th>電子郵件</th><th >訂單品項</th><th>訂單日期</th><th>訂單狀態</th><th>操作</th></tr></thead>";
-
-//     // let length=data.length;
      data.forEach((item) => {
         let prods = "";
         // console.log(item.createdAt);
@@ -330,6 +340,7 @@ function c3render(data) {
 function deleteAllOrder() {
     axios.delete(`https://livejs-api.hexschool.io/api/livejs/v1/admin/${api_path}/orders`,config)
         .then(function (response) {
+            
             init();
 
         }).catch(function (error) {
